@@ -5,12 +5,10 @@ import {
   Box,
   Button,
   CircularProgress,
-  Container,
   IconButton,
   InputAdornment,
   TextField,
   Typography,
-  Paper,
   Link as MuiLink,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
@@ -24,6 +22,7 @@ import { useRouter } from "next/navigation";
 import secureLocalStorage from "react-secure-storage";
 import { getUserById } from "@/redux/slice/AuthSlice";
 import { useAppDispatch } from "@/redux/hooks";
+import { AuthLayout } from "@/GlobalComponents/layout/AuthLayout";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -76,43 +75,40 @@ export default function LoginPage() {
   };
 
   return (
-    <Container
-      maxWidth="sm"
-      sx={{ minHeight: "100vh", display: "flex", alignItems: "center" }}
-    >
-      <Paper
-        elevation={4}
-        sx={{ p: 4, borderRadius: 3, width: "100%", textAlign: "center" }}
+    <AuthLayout>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>
+        Login to Student Info System
+      </Typography>
+      <Typography variant="body2" color="text.secondary" mb={3}>
+        Login in seconds. No credit card required.
+      </Typography>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        noValidate
+        className="flex flex-col gap-5"
       >
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Login to Insurance Dashboard & Analytics
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Login in seconds. No credit card required.
-        </Typography>
-
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <TextField
-            fullWidth
-            required
-            label="Email Address"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            margin="normal"
-          />
-
-          <TextField
-            fullWidth
-            required
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value.trim())}
-            disabled={loading}
-            margin="normal"
-            InputProps={{
+        <TextField
+          fullWidth
+          required
+          label="Email Address"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={loading}
+          variant="standard"
+        />
+        <TextField
+          fullWidth
+          required
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          value={password}
+          variant="standard"
+          onChange={(e) => setPassword(e.target.value.trim())}
+          disabled={loading}
+          slotProps={{
+            input: {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
@@ -123,33 +119,33 @@ export default function LoginPage() {
                   </IconButton>
                 </InputAdornment>
               ),
-            }}
-          />
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 2, mb: 2 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
-          </Button>
+            },
+          }}
+        />
+        <Button
+          fullWidth
+          type="submit"
+          variant="contained"
+          size="large"
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
+        </Button>
+        <Box className="flex flex-col gap-1">
+          <Typography variant="body2" component="span">
+            Forgot password?{" "}
+            <MuiLink component={Link} href="/forgot-password" underline="hover">
+              Reset here
+            </MuiLink>
+          </Typography>
+          {/* <Typography variant="body2" component="span">
+            Don&apos;t have an account?{" "}
+            <MuiLink component={Link} href="/signup" underline="hover">
+              Sign up here
+            </MuiLink>
+          </Typography> */}
         </Box>
-
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          <span>Forgot password? </span>
-          <MuiLink component={Link} href="/forgot-password" underline="hover">
-            Reset here
-          </MuiLink>
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          <span>Don&apos;t have an account? </span>
-          <MuiLink component={Link} href="/signup" underline="hover">
-            Sign up here
-          </MuiLink>
-        </Typography>
-      </Paper>
-    </Container>
+      </Box>
+    </AuthLayout>
   );
 }
