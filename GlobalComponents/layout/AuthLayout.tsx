@@ -5,7 +5,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   return (
-    <Box className="flex h-screen items-center">
+    <Box className="flex h-dvh items-center">
       <Container maxWidth="sm">
         <Paper
           elevation={4}

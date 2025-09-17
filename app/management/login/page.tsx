@@ -77,10 +77,10 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Login to Student Info System
+        Login to the Student Admission System
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Login in seconds. No credit card required.
+        Login to access the admission dashboard
       </Typography>
       <Box
         component="form"

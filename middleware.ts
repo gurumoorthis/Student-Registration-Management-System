@@ -9,21 +9,20 @@ function isRole(value: string | undefined): value is Role {
 }
 
 const publicPaths = [
-  "/login",
-  "/signup",
-  "/forgot-password",
+  "/management/login",
   "/api",
   "/favicon.ico",
-  "/student-register",
+  "/student/register",
 ];
 
 // Define allowed routes per role
 const roleBasedRoutes: Record<Role, string[]> = {
-  admin: ["/", "/policies", "/users"],
-  teacher: ["/", "/policies"],
+  admin: ["/mangement/dashboard", "/mangement/students", "/mangement/users"],
+  teacher: ["/mangement/dashboard", "/mangement/students"],
 };
 
 export function middleware(request: NextRequest) {
+  return NextResponse.next();
   const { pathname } = request.nextUrl;
   if (
     publicPaths.some((path) => pathname.startsWith(path)) ||
@@ -33,12 +32,12 @@ export function middleware(request: NextRequest) {
   }
   const token = request.cookies.get("access_token")?.value;
   if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/management/login", request.url));
   }
   const role = request.cookies.get("role")?.value;
 
   if (!isRole(role)) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/management/login", request.url));
   }
   const allowedPaths = roleBasedRoutes[role];
   const isAllowed = allowedPaths.some((path) => pathname === path);

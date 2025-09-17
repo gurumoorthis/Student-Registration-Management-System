@@ -9,7 +9,7 @@ import {
   getPremiumSumByType,
 } from "@/redux/slice/DashboardSlice";
 import type { RootState } from "@/redux/store";
-import { Skeleton } from "@mui/material";
+import { Box, Grid, Skeleton, Stack, Typography } from "@mui/material";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -278,45 +278,52 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageTitle title="Dashboard" />
+    <>
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <Grid container spacing={3}>
           {sections.map((title) => (
-            <div key={title} className="bg-white p-4 rounded-2xl shadow">
-              <h2 className="text-lg font-semibold mb-4">{title}</h2>
-              <Skeleton className="w-full h-50" />
-            </div>
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={title}>
+              <Stack
+                className="bg-white p-4 rounded-2xl shadow"
+                sx={{ height: "100%" }}
+                justifyContent="space-between"
+              >
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {title}
+                </Typography>
+                <Skeleton className="w-full h-50" />
+              </Stack>
+            </Grid>
           ))}
-        </div>
+        </Grid>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <div className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-4">
+        <Grid container>
+          <Box className="bg-white p-4 rounded-2xl shadow">
+            <Typography variant="subtitle1" fontWeight="bold">
               Policy Distribution by Region
-            </h2>
+            </Typography>
             <Pie data={pieData} />
-          </div>
-          <div className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-4">
+          </Box>
+          <Box className="bg-white p-4 rounded-2xl shadow">
+            <Typography variant="subtitle1" fontWeight="bold">
               Monthly New Policies by Category
-            </h2>
+            </Typography>
             <Bar data={barData} />
-          </div>
-          <div className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-4">
+          </Box>
+          <Box className="bg-white p-4 rounded-2xl shadow">
+            <Typography variant="subtitle1" fontWeight="bold">
               Total Coverage Amount Over Time
-            </h2>
+            </Typography>
             <Line data={lineData} options={lineOptions} />
-          </div>
-          <div className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-4">
+          </Box>
+          <Box className="bg-white p-4 rounded-2xl shadow">
+            <Typography variant="subtitle1" fontWeight="bold">
               Policy Count by Type and Status
-            </h2>
+            </Typography>
             <Bar data={stackedBarChartData} options={stackedBarOptions} />
-          </div>
-        </div>
+          </Box>
+        </Grid>
       )}
-    </div>
+    </>
   );
 }
