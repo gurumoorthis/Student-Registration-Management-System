@@ -69,7 +69,18 @@ export default function Students() {
   const [isEdit, setIsEdit] = useState(false);
   const [fetchData, setFetchData] = useState(true);
   const [openDelete, setOpenDelete] = useState(false);
-  const [userList, setUserList] = useState<User[]>([{ id: 1 }]);
+  const [userList, setUserList] = useState<User[]>([
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+    { id: 1 },
+  ]);
   const [policyHolderUserList, setPolicyHolderUserList] = useState<User[]>([]);
   const [values, setValues] = useState<string[]>([]);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -230,246 +241,244 @@ export default function Students() {
   }, [roles]);
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack rowGap={1}>
-        <Stack direction="row" justifyContent="end">
-          <Fab size="small" color="primary" onClick={() => handleEdit(user)}>
-            <AddRoundedIcon fontSize="small" />
-          </Fab>
-        </Stack>
-        <TableContainer>
-          <Table>
-            <TableHead sx={{ backgroundColor: "#f7f7f7" }}>
-              <TableRow>
-                <TableCell sx={{ px: 1, py: 1.5 }}>S.No</TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Name
+    <Paper sx={{ borderRadius: 3 }} component={Stack} className="flex-1">
+      <Stack direction="row" justifyContent="end" sx={{ p: 1 }}>
+        <Fab size="small" color="primary" onClick={() => handleEdit(user)}>
+          <AddRoundedIcon fontSize="small" />
+        </Fab>
+      </Stack>
+      <TableContainer className="max-h-fit">
+        <Table stickyHeader>
+          <TableHead sx={{ backgroundColor: "#f7f7f7" }}>
+            <TableRow>
+              <TableCell sx={{ px: 1, py: 1.5 }}>S.No</TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Name
+              </TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Email
+              </TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Phone
+              </TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Password
+              </TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Role
+              </TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Created Date
+              </TableCell>
+              <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
+                Actions
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {userList.map((user, index) => (
+              <TableRow key={user.id}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell align="center">{user.name}</TableCell>
+                <TableCell align="center">{user.email}</TableCell>
+                <TableCell align="center">{user.phone}</TableCell>
+                <TableCell align="center">{user.password}</TableCell>
+                <TableCell align="center">
+                  {toTitleCase(user.roles?.name ?? "")}
                 </TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Email
+                <TableCell align="center">
+                  {moment(user.created_at).format("DD MMM yyyy")}
                 </TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Phone
-                </TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Password
-                </TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Role
-                </TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Created Date
-                </TableCell>
-                <TableCell align="center" sx={{ px: 1, py: 1.5 }}>
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {userList.map((user, index) => (
-                <TableRow key={user.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell align="center">{user.name}</TableCell>
-                  <TableCell align="center">{user.email}</TableCell>
-                  <TableCell align="center">{user.phone}</TableCell>
-                  <TableCell align="center">{user.password}</TableCell>
-                  <TableCell align="center">
-                    {toTitleCase(user.roles?.name ?? "")}
-                  </TableCell>
-                  <TableCell align="center">
-                    {moment(user.created_at).format("DD MMM yyyy")}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Stack direction="row" justifyContent="center" gap={1}>
+                <TableCell align="center">
+                  <Stack direction="row" justifyContent="center" gap={1}>
+                    <Fab
+                      size="small"
+                      color="secondary"
+                      onClick={() => handleEdit(user)}
+                    >
+                      <CreateRoundedIcon fontSize="small" />
+                    </Fab>
+                    <Fab
+                      size="small"
+                      color="warning"
+                      onClick={() => handleOpenDelete(user)}
+                    >
+                      <InfoRoundedIcon fontSize="small" />
+                    </Fab>
+                    {userDetails.roles?.name === Role.ADMIN && (
                       <Fab
                         size="small"
-                        color="secondary"
-                        onClick={() => handleEdit(user)}
-                      >
-                        <CreateRoundedIcon fontSize="small" />
-                      </Fab>
-                      <Fab
-                        size="small"
-                        color="warning"
+                        color="error"
                         onClick={() => handleOpenDelete(user)}
                       >
-                        <InfoRoundedIcon fontSize="small" />
+                        <DeleteRoundedIcon fontSize="small" />
                       </Fab>
-                      {userDetails.roles?.name === Role.ADMIN && (
-                        <Fab
-                          size="small"
-                          color="error"
-                          onClick={() => handleOpenDelete(user)}
-                        >
-                          <DeleteRoundedIcon fontSize="small" />
-                        </Fab>
-                      )}
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  {userList.length === 0 ? (
-                    <Typography>No data found</Typography>
-                  ) : (
-                    <Pagination
-                      count={totalPolicyCount}
-                      page={currentPage}
-                      onChange={(_, page) => setCurrentPage(page)}
-                    />
-                  )}
+                    )}
+                  </Stack>
                 </TableCell>
               </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
-        {/* Add / Edit Dialog */}
-        <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-          <DialogTitle>{isEdit ? "Update User" : "Add User"}</DialogTitle>
-          <DialogContent>
-            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                margin="dense"
-                label="Name"
-                required
-                value={formState.name ?? ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, name: e.target.value })
-                }
-              />
-              <TextField
-                fullWidth
-                margin="dense"
-                label="Email"
-                type="email"
-                required
-                value={formState.email ?? ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, email: e.target.value })
-                }
-              />
-              <TextField
-                fullWidth
-                margin="dense"
-                label="Phone"
-                required
-                inputProps={{ maxLength: 10 }}
-                value={formState.phone ?? ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, phone: e.target.value })
-                }
-              />
-              <TextField
-                fullWidth
-                margin="dense"
-                label="Password"
-                type="password"
-                required
-                inputProps={{ maxLength: 6 }}
-                value={formState.password ?? ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, password: e.target.value })
-                }
-              />
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={8} align="center">
+                {userList.length === 0 ? (
+                  <Typography>No data found</Typography>
+                ) : (
+                  <Pagination
+                    count={totalPolicyCount}
+                    page={currentPage}
+                    onChange={(_, page) => setCurrentPage(page)}
+                  />
+                )}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+      {/* Add / Edit Dialog */}
+      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+        <DialogTitle>{isEdit ? "Update User" : "Add User"}</DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Name"
+              required
+              value={formState.name ?? ""}
+              onChange={(e) =>
+                setFormState({ ...formState, name: e.target.value })
+              }
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Email"
+              type="email"
+              required
+              value={formState.email ?? ""}
+              onChange={(e) =>
+                setFormState({ ...formState, email: e.target.value })
+              }
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Phone"
+              required
+              inputProps={{ maxLength: 10 }}
+              value={formState.phone ?? ""}
+              onChange={(e) =>
+                setFormState({ ...formState, phone: e.target.value })
+              }
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Password"
+              type="password"
+              required
+              inputProps={{ maxLength: 6 }}
+              value={formState.password ?? ""}
+              onChange={(e) =>
+                setFormState({ ...formState, password: e.target.value })
+              }
+            />
 
-              {userDetails.roles?.name === Role.ADMIN && (
-                <FormControl fullWidth margin="dense">
-                  <InputLabel>Role</InputLabel>
-                  <Select
-                    value={formState.role_id?.toString() ?? ""}
-                    onChange={(e) =>
-                      setFormState({ ...formState, role_id: e.target.value })
-                    }
-                  >
-                    {roles?.map((role) => (
-                      <MenuItem key={role.id} value={String(role.id)}>
-                        {toTitleCase(role.name)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
+            {userDetails.roles?.name === Role.ADMIN && (
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={formState.role_id?.toString() ?? ""}
+                  onChange={(e) =>
+                    setFormState({ ...formState, role_id: e.target.value })
+                  }
+                >
+                  {roles?.map((role) => (
+                    <MenuItem key={role.id} value={String(role.id)}>
+                      {toTitleCase(role.name)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
-              {/* Agent Clients Multi-Select */}
-              {formState.role_id ===
-                roles.find((role) => role.name === Role.AGENT)?.id && (
-                <Box mt={2}>
-                  <Button
-                    variant="outlined"
-                    onClick={(e) => setAnchorEl(e.currentTarget)}
-                  >
-                    Select Agent Clients
-                  </Button>
-                  <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
-                    {values.map((val) => (
-                      <Chip
-                        key={val}
-                        label={
-                          policyHolderUserList.find((f) => f.id === val)
-                            ?.name ?? val
-                        }
-                        onDelete={() => toggleValue(val)}
-                      />
+            {/* Agent Clients Multi-Select */}
+            {formState.role_id ===
+              roles.find((role) => role.name === Role.AGENT)?.id && (
+              <Box mt={2}>
+                <Button
+                  variant="outlined"
+                  onClick={(e) => setAnchorEl(e.currentTarget)}
+                >
+                  Select Agent Clients
+                </Button>
+                <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+                  {values.map((val) => (
+                    <Chip
+                      key={val}
+                      label={
+                        policyHolderUserList.find((f) => f.id === val)?.name ??
+                        val
+                      }
+                      onDelete={() => toggleValue(val)}
+                    />
+                  ))}
+                </Box>
+                <Popover
+                  open={Boolean(anchorEl)}
+                  anchorEl={anchorEl}
+                  onClose={() => setAnchorEl(null)}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                  }}
+                >
+                  <Box p={2}>
+                    {policyHolderUserList.map((user) => (
+                      <Box
+                        key={user.id}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          cursor: "pointer",
+                          p: 1,
+                        }}
+                        onClick={() => toggleValue(user.id)}
+                      >
+                        <span>{user.name}</span>
+                        {values.includes(user.id) && <span>✔</span>}
+                      </Box>
                     ))}
                   </Box>
-                  <Popover
-                    open={Boolean(anchorEl)}
-                    anchorEl={anchorEl}
-                    onClose={() => setAnchorEl(null)}
-                    anchorOrigin={{
-                      vertical: "bottom",
-                      horizontal: "left",
-                    }}
-                  >
-                    <Box p={2}>
-                      {policyHolderUserList.map((user) => (
-                        <Box
-                          key={user.id}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            cursor: "pointer",
-                            p: 1,
-                          }}
-                          onClick={() => toggleValue(user.id)}
-                        >
-                          <span>{user.name}</span>
-                          {values.includes(user.id) && <span>✔</span>}
-                        </Box>
-                      ))}
-                    </Box>
-                  </Popover>
-                </Box>
-              )}
+                </Popover>
+              </Box>
+            )}
 
-              <DialogActions sx={{ mt: 2 }}>
-                <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" variant="contained">
-                  {isEdit ? "Update" : "Add"}
-                </Button>
-              </DialogActions>
-            </Box>
-          </DialogContent>
-        </Dialog>
+            <DialogActions sx={{ mt: 2 }}>
+              <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" variant="contained">
+                {isEdit ? "Update" : "Add"}
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
 
-        {/* Delete Dialog */}
-        <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-          <DialogTitle>Delete User</DialogTitle>
-          <DialogContent>
-            Are you sure you want to delete this user?
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDelete(false)}>Cancel</Button>
-            <Button color="error" variant="contained" onClick={handleDelete}>
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Stack>
+      {/* Delete Dialog */}
+      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
+        <DialogTitle>Delete User</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this user?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDelete(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

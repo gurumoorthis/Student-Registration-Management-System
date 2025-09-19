@@ -39,6 +39,7 @@ import {
   Diversity3Rounded,
   PeopleAltRounded,
 } from "@mui/icons-material";
+import { useAppContext } from "@/app/context/AppContext";
 
 const drawerWidth = 240;
 
@@ -58,8 +59,7 @@ type Role = keyof typeof sidebarItemsByRole;
 
 export default function Sidebar({ role }: { role: Role }) {
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
+  const { mobileOpen, setMobileOpen } = useAppContext();
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -101,7 +101,7 @@ export default function Sidebar({ role }: { role: Role }) {
           <CloseRoundedIcon fontSize="small" />
         </IconButton>
       )}
-      <Stack direction="row" gap={2} alignItems="center">
+      <Stack direction="row" gap={1} alignItems="center">
         <SchoolRoundedIcon sx={{ fontSize: 40 }} color="primary" />
         <Typography variant="h6" fontWeight="bold">
           Admitly
@@ -160,28 +160,6 @@ export default function Sidebar({ role }: { role: Role }) {
 
   return (
     <>
-      {/* Top AppBar for mobile */}
-      {isMobile && (
-        <AppBar
-          position="sticky"
-          color="default"
-          sx={{ zIndex: theme.zIndex.drawer + 1 }}
-        >
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={() => setMobileOpen(true)}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" noWrap>
-              App Name
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      )}
-
       {/* Sidebar Drawer */}
       {/* Mobile Drawer */}
       <Drawer

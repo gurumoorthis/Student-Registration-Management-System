@@ -284,7 +284,7 @@ export default function Dashboard() {
           {sections.map((title) => (
             <Grid size={{ xs: 12, md: 6, lg: 4 }} key={title}>
               <Stack
-                className="bg-white p-4 rounded-2xl shadow"
+                className="bg-white p-4 rounded-xl shadow"
                 sx={{ height: "100%" }}
                 justifyContent="space-between"
               >
@@ -298,25 +298,25 @@ export default function Dashboard() {
         </Grid>
       ) : (
         <Grid container>
-          <Box className="bg-white p-4 rounded-2xl shadow">
+          <Box className="bg-white p-4 rounded-xl shadow">
             <Typography variant="subtitle1" fontWeight="bold">
               Policy Distribution by Region
             </Typography>
             <Pie data={pieData} />
           </Box>
-          <Box className="bg-white p-4 rounded-2xl shadow">
+          <Box className="bg-white p-4 rounded-xl shadow">
             <Typography variant="subtitle1" fontWeight="bold">
               Monthly New Policies by Category
             </Typography>
             <Bar data={barData} />
           </Box>
-          <Box className="bg-white p-4 rounded-2xl shadow">
+          <Box className="bg-white p-4 rounded-xl shadow">
             <Typography variant="subtitle1" fontWeight="bold">
               Total Coverage Amount Over Time
             </Typography>
             <Line data={lineData} options={lineOptions} />
           </Box>
-          <Box className="bg-white p-4 rounded-2xl shadow">
+          <Box className="bg-white p-4 rounded-xl shadow">
             <Typography variant="subtitle1" fontWeight="bold">
               Policy Count by Type and Status
             </Typography>
