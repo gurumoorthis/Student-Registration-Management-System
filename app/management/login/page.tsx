@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Box,
   Button,
-  CircularProgress,
   IconButton,
   InputAdornment,
   TextField,
@@ -20,57 +19,67 @@ import { ERROR_MESSAGES } from "@/utils/constants";
 import { getToastOptions } from "@/utils/getToastOptions";
 import { useRouter } from "next/navigation";
 import secureLocalStorage from "react-secure-storage";
-import { getUserById } from "@/redux/slice/AuthSlice";
+import { getUserByAuthId } from "@/redux/slice/AuthSlice";
 import { useAppDispatch } from "@/redux/hooks";
 import { AuthLayout } from "@/GlobalComponents/layout/AuthLayout";
+import { useAppContext } from "@/app/context/AppContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-
+  const { setLoading, showCatchError } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const response = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const response = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      setLoading(false);
 
-    setLoading(false);
+      if (response.error || !response.data.user) {
+        toast.error(
+          response.error?.message ?? ERROR_MESSAGES.GENERIC,
+          getToastOptions()
+        );
+        return;
+      }
 
-    if (response.error) {
-      toast.error(
-        response.error?.message ?? ERROR_MESSAGES.GENERIC,
-        getToastOptions()
-      );
-    } else {
-      toast.success("Login success", getToastOptions());
+      const userAuth = response.data.user;
 
-      const user = response.data.user;
-      dispatch(getUserById(user.id ?? ""));
-      secureLocalStorage.setItem("user_id", user.id);
-      secureLocalStorage.setItem("email", user.email ?? "");
+      // Fetch user details from your table
+      const payload = await dispatch(getUserByAuthId(userAuth.id)).unwrap();
+      if (payload?.status !== "APPROVED") {
+        toast.error(
+          `Your account is ${payload?.status} status. Contact Management.`,
+          getToastOptions()
+        );
+        return;
+      }
+
+      // Store tokens and user info
       secureLocalStorage.setItem(
         "access_token",
         response.data?.session?.access_token ?? ""
       );
       secureLocalStorage.setItem(
         "refresh_token",
-        response.data?.session?.refresh_token
+        response.data?.session?.refresh_token ?? ""
       );
-
+      document.cookie = `role=${payload.roles?.name}; Path=/; SameSite=Strict;`;
       document.cookie = `access_token=${response.data?.session?.access_token}; Path=/; SameSite=Strict;`;
       document.cookie = `refresh_token=${response.data?.session?.refresh_token}; Path=/; SameSite=Strict;`;
 
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
+      toast.success("Login success", getToastOptions());
+      setTimeout(() => router.push("/management/dashboard"), 2000);
+    } catch (error) {
+      showCatchError(error as Error);
     }
   };
 
@@ -85,7 +94,6 @@ export default function LoginPage() {
       <Box
         component="form"
         onSubmit={handleSubmit}
-        noValidate
         className="flex flex-col gap-5"
       >
         <TextField
@@ -95,7 +103,6 @@ export default function LoginPage() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
           variant="standard"
         />
         <TextField
@@ -106,8 +113,10 @@ export default function LoginPage() {
           value={password}
           variant="standard"
           onChange={(e) => setPassword(e.target.value.trim())}
-          disabled={loading}
           slotProps={{
+            htmlInput: {
+              minLength: 6,
+            },
             input: {
               endAdornment: (
                 <InputAdornment position="end">
@@ -122,28 +131,30 @@ export default function LoginPage() {
             },
           }}
         />
-        <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          size="large"
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
+        <Button fullWidth type="submit" variant="contained" size="large">
+          Login
         </Button>
         <Box className="flex flex-col gap-1">
           <Typography variant="body2" component="span">
             Forgot password?{" "}
-            <MuiLink component={Link} href="/forgot-password" underline="hover">
+            <MuiLink
+              component={Link}
+              href="/management/forgot-password"
+              underline="hover"
+            >
               Reset here
             </MuiLink>
           </Typography>
-          {/* <Typography variant="body2" component="span">
+          <Typography variant="body2" component="span">
             Don&apos;t have an account?{" "}
-            <MuiLink component={Link} href="/signup" underline="hover">
+            <MuiLink
+              component={Link}
+              href="/management/signup"
+              underline="hover"
+            >
               Sign up here
             </MuiLink>
-          </Typography> */}
+          </Typography>
         </Box>
       </Box>
     </AuthLayout>

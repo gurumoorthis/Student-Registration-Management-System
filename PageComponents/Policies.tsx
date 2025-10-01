@@ -44,9 +44,10 @@ import { useSelector } from "react-redux";
 import moment from "moment";
 import { toast } from "sonner";
 import { useAppContext } from "@/app/context/AppContext";
-import { Role } from "@/enums";
+import { RoleType } from "@/enums";
 import { getAllUsers, type User } from "@/redux/slice/AuthSlice";
 import PageTitle from "@/GlobalComponents/PageTitle";
+import { getToastOptions } from "@/utils/getToastOptions";
 
 export default function Policies() {
   const userId = secureLocalStorage.getItem("user_id") as string;
@@ -57,7 +58,7 @@ export default function Policies() {
   const { userDetails, userList } = useSelector(
     (state: RootState) => state.AUTH
   );
-  const { setLoading } = useAppContext();
+  const { setLoading, showCatchError } = useAppContext();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formState, setFormState] = useState<Partial<Policy>>({});
@@ -95,7 +96,7 @@ export default function Policies() {
       setFormState({});
       setClientUserId("");
     } catch (error) {
-      toast.error("Failed to save policy");
+      showCatchError(error as Error);
     } finally {
       setLoading(false);
     }
@@ -113,9 +114,9 @@ export default function Policies() {
     try {
       setLoading(true);
       await dispatch(deletePolicy(activePolicy)).unwrap();
-      toast.success("Policy deleted");
-    } catch {
-      toast.error("Failed to delete policy");
+      toast.success("Policy deleted", getToastOptions());
+    } catch (error) {
+      showCatchError(error as Error);
     } finally {
       setLoading(false);
       setOpenDelete(false);
@@ -125,7 +126,7 @@ export default function Policies() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      if (userDetails.roles?.name === Role.POLICY_HOLDER) {
+      if (userDetails.role === RoleType.POLICY_HOLDER) {
         await dispatch(
           getUserPolicies({
             user_id: userId,
@@ -133,7 +134,7 @@ export default function Policies() {
             limit: rowsPerPage,
           })
         );
-      } else if (userDetails.roles?.name === Role.AGENT) {
+      } else if (userDetails.role === RoleType.AGENT) {
         await dispatch(
           getPoliciesByAgent({
             agent_id: userId,
@@ -149,7 +150,7 @@ export default function Policies() {
       setIsLoading(false);
     };
     if (userId) fetchData();
-  }, [dispatch, userId, currentPage, rowsPerPage, userDetails.roles?.name]);
+  }, [dispatch, userId, currentPage, rowsPerPage, userDetails.role]);
 
   useEffect(() => {
     if (userId) dispatch(getAllUsers());
@@ -163,7 +164,7 @@ export default function Policies() {
     <div>
       <div className="flex justify-between items-center mb-3">
         <PageTitle title="Policies" />
-        {userDetails.roles?.name !== Role.POLICY_HOLDER && (
+        {userDetails.role !== Role.POLICY_HOLDER && (
           <Button variant="contained" onClick={() => setIsDialogOpen(true)}>
             Add Policy
           </Button>
@@ -212,7 +213,7 @@ export default function Policies() {
                     >
                       <Edit />
                     </IconButton>
-                    {userDetails.roles?.name === Role.ADMIN && (
+                    {userDetails.role === RoleType.ADMIN && (
                       <IconButton
                         color="error"
                         onClick={() => {
@@ -246,11 +247,7 @@ export default function Policies() {
       )}
 
       {/* Add / Edit Dialog */}
-      <Dialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        fullWidth
-      >
+      <Dialog open={isDialogOpen} fullWidth>
         <DialogTitle>{isEdit ? "Update Policy" : "Add Policy"}</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent
@@ -276,7 +273,7 @@ export default function Policies() {
               </Select>
             </FormControl>
 
-            {userDetails.roles?.name !== Role.POLICY_HOLDER && (
+            {userDetails.role !== RoleType.POLICY_HOLDER && (
               <FormControl fullWidth>
                 <InputLabel>Policyholder</InputLabel>
                 <Select
@@ -351,7 +348,7 @@ export default function Policies() {
       </Dialog>
 
       {/* Delete Confirm Dialog */}
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
+      <Dialog open={openDelete}>
         <DialogTitle>Delete Policy</DialogTitle>
         <DialogContent>
           Are you sure you want to delete this policy?

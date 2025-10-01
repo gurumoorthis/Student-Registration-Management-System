@@ -1,24 +1,21 @@
 "use client";
 
-import { memo } from "react";
+import React, { memo } from "react";
 import { Stack, Typography, Divider } from "@mui/material";
 
 interface FormTitleProps {
   title: string;
 }
 
-const FormTitle = memo(({ title }: FormTitleProps) => {
-  console.log(title);
+const FormTitle = ({ title }: FormTitleProps) => {
   return (
     <Stack alignItems="flex-start" sx={{ width: "fit-content" }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
+      <Typography variant="h6">{title}</Typography>
       <Divider
         sx={{ width: "100%", borderColor: "primary.main", borderWidth: "1px" }}
       />
     </Stack>
   );
-});
+};
 
-export { FormTitle };
+export default memo(FormTitle);

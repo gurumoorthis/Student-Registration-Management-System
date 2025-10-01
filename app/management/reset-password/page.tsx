@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/supabaseClient";
@@ -27,13 +27,20 @@ export default function SignUpPage() {
     setOpenDialogNotification,
     showCatchError,
   } = useAppContext();
-  const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      setToken(params.get("access_token"));
+    }
+  }, []);
+  console.log(token);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,49 +48,38 @@ export default function SignUpPage() {
       toast.error("Passwords do not match", getToastOptions());
       return;
     }
+    if (!token) {
+      toast.error("Invalid or expired reset token.");
+      return;
+    }
     setLoading(true);
     try {
-      const signUpResponse = await supabase.auth.signUp({
-        email,
+      const { error } = await supabase.auth.updateUser({
         password,
       });
-      if (signUpResponse.error) {
+
+      if (error) {
         toast.error(
-          `Error signing up: ${signUpResponse.error.message}`,
+          `Error resetting password: ${error.message}`,
           getToastOptions()
         );
         setLoading(false);
         return;
       }
-      const userDetails = signUpResponse.data.user;
-      if (!userDetails) {
-        toast.error("User details missing after signup.", getToastOptions());
-        setLoading(false);
-        return;
-      }
-      const { error: userDataError } = await supabase.from("users").insert({
-        auth_id: userDetails?.id,
-        name,
-        email,
-        phone,
-        password,
-      });
-      if (userDataError) {
-        toast.error(
-          userDataError.message ?? "An error occurred while saving user data.",
-          getToastOptions()
-        );
-        setLoading(false);
-        return;
-      }
+
+      await supabase
+        .from("users")
+        .update({ password })
+        .eq("auth_id", (await supabase.auth.getUser()).data.user?.id);
+
       setOpenDialogNotification(true);
       setDialogNotificationContent({
-        title: "Registration Successful",
+        title: "Password Reset Successful",
         content:
-          "Registration successful! A verification email has been sent to your email address. " +
-          "Please verify your email and wait for account approval by the Management before logging in.",
+          "Your password has been updated successfully. Please login with your new password.",
         isSuccess: true,
       });
+
       router.push("/management/login");
     } catch (error) {
       showCatchError(error as Error);
@@ -95,55 +91,17 @@ export default function SignUpPage() {
   return (
     <AuthLayout>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Signup to Student Info System
+        Reset Password
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Signup in seconds. No credit card required.
+        Enter your new password below and confirm it to securely update your
+        account access
       </Typography>
       <Box
         component="form"
         onSubmit={handleSubmit}
         className="flex flex-col gap-5"
       >
-        <TextField
-          label="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          fullWidth
-          variant="standard"
-        />
-        <TextField
-          label="Phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-          fullWidth
-          variant="standard"
-          slotProps={{
-            htmlInput: {
-              maxLength: 10,
-              minLength: 10,
-            },
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Typography>+91</Typography>
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <TextField
-          fullWidth
-          required
-          variant="standard"
-          label="Email Address"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
         <TextField
           fullWidth
           required
@@ -197,12 +155,16 @@ export default function SignUpPage() {
           }}
         />
         <Button fullWidth type="submit" variant="contained" size="large">
-          Signup
+          Reset
         </Button>
         <Typography variant="body2" component="span">
-          Already have an account?{" "}
-          <MuiLink component={Link} href="/management/login" underline="hover">
-            Login
+          Didn&apos;t get the reset link?{" "}
+          <MuiLink
+            component={Link}
+            href="/management/forgot-password"
+            underline="hover"
+          >
+            Forgot password
           </MuiLink>
         </Typography>
       </Box>

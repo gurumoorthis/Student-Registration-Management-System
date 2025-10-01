@@ -1,13 +1,13 @@
 import AppHeader from "@/GlobalComponents/layout/AppHeader";
 import { ManagementBodyLayout } from "@/GlobalComponents/layout/ManagementBodyLayout";
-import Dashboard from "@/PageComponents/Dashboard";
+import Users from "@/PageComponents/Users";
 
 export default function Home() {
   return (
     <>
-      <AppHeader title="Dashboard" />
+      <AppHeader title="Users" />
       <ManagementBodyLayout>
-        <Dashboard />
+        <Users />
       </ManagementBodyLayout>
     </>
   );

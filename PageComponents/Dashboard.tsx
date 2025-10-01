@@ -1,6 +1,6 @@
 "use client";
 
-import PageTitle from "@/GlobalComponents/PageTitle";
+import { useAppContext } from "@/app/context/AppContext";
 import { useAppDispatch } from "@/redux/hooks";
 import {
   getCoverageByType,
@@ -140,6 +140,7 @@ export default function Dashboard() {
     coverageTypeData,
     premiumByType,
   } = useSelector((state: RootState) => state.DASHBOARD);
+  const { showCatchError } = useAppContext();
   const dispatch = useAppDispatch();
   const [stackedBarChartData, setStackedBarChartData] = useState<{
     labels: string[];
@@ -202,7 +203,7 @@ export default function Dashboard() {
         await dispatch(getCoverageByType(userId));
         await dispatch(getPremiumSumByType());
       } catch (error) {
-        console.error(error);
+        showCatchError(error as Error);
       } finally {
         setIsLoading(false);
       }

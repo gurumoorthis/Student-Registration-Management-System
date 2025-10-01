@@ -2,14 +2,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-type Role = "teacher" | "admin";
+type Role = "SUPER_ADMIN" | "ADMIN" | "STUDENT";
 
 function isRole(value: string | undefined): value is Role {
-  return value === "teacher" || value === "admin";
+  return value === "SUPER_ADMIN" || value === "ADMIN";
 }
 
 const publicPaths = [
   "/management/login",
+  "/management/forgot-password",
+  "/management/reset-password",
+  "/management/signup",
   "/api",
   "/favicon.ico",
   "/student/register",
@@ -17,12 +20,17 @@ const publicPaths = [
 
 // Define allowed routes per role
 const roleBasedRoutes: Record<Role, string[]> = {
-  admin: ["/mangement/dashboard", "/mangement/students", "/mangement/users"],
-  teacher: ["/mangement/dashboard", "/mangement/students"],
+  SUPER_ADMIN: [
+    "/management/dashboard",
+    "/management/students",
+    "/management/users",
+  ],
+  ADMIN: ["/management/dashboard", "/management/students"],
+  STUDENT: [],
 };
 
 export function middleware(request: NextRequest) {
-  return NextResponse.next();
+  // return NextResponse.next();
   const { pathname } = request.nextUrl;
   if (
     publicPaths.some((path) => pathname.startsWith(path)) ||

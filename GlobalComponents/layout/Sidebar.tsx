@@ -9,11 +9,7 @@ import { toast } from "sonner";
 import { getToastOptions } from "@/utils/getToastOptions";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
-
-// ✅ MUI Imports
 import {
-  AppBar,
-  Toolbar,
   IconButton,
   Drawer,
   List,
@@ -31,25 +27,25 @@ import {
   ListItemButton,
   useTheme,
 } from "@mui/material";
-// ✅ MUI Icons
 import {
   Home as HomeIcon,
   Logout as LogoutIcon,
-  Menu as MenuIcon,
   Diversity3Rounded,
   PeopleAltRounded,
 } from "@mui/icons-material";
 import { useAppContext } from "@/app/context/AppContext";
+import { supabase } from "@/supabaseClient";
+import { clearAllCookies } from "@/utils/clearAllCookies";
 
 const drawerWidth = 240;
 
 export const sidebarItemsByRole = {
-  admin: [
+  SUPER_ADMIN: [
     { name: "Dashboard", path: "/management/dashboard", icon: HomeIcon },
-    { name: "students", path: "/management/students", icon: PeopleAltRounded },
+    { name: "Students", path: "/management/students", icon: Diversity3Rounded },
     { name: "Users", path: "/management/users", icon: PeopleAltRounded },
   ],
-  teacher: [
+  ADMIN: [
     { name: "Dashboard", path: "/management/dashboard", icon: HomeIcon },
     { name: "Students", path: "/management/students", icon: Diversity3Rounded },
   ],
@@ -58,6 +54,7 @@ export const sidebarItemsByRole = {
 type Role = keyof typeof sidebarItemsByRole;
 
 export default function Sidebar({ role }: { role: Role }) {
+  console.log(role);
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const { mobileOpen, setMobileOpen } = useAppContext();
   const pathname = usePathname();
@@ -68,13 +65,12 @@ export default function Sidebar({ role }: { role: Role }) {
 
   const items = sidebarItemsByRole[role];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     secureLocalStorage.clear();
     dispatch({ type: "RESET_APP" });
-    document.cookie = "access_token=; Max-Age=0; path=/;";
-    document.cookie = "refresh_token=; Max-Age=0; path=/;";
-    document.cookie = "role=; Max-Age=0; path=/;";
-    router.push("/login");
+    clearAllCookies();
+    router.push("/management/login");
     toast.success("Logged out", getToastOptions());
   };
 
@@ -164,7 +160,6 @@ export default function Sidebar({ role }: { role: Role }) {
       {/* Mobile Drawer */}
       <Drawer
         open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", sm: "none" },
@@ -193,10 +188,7 @@ export default function Sidebar({ role }: { role: Role }) {
       </Drawer>
 
       {/* Logout Dialog */}
-      <Dialog
-        open={openLogoutDialog}
-        onClose={() => setOpenLogoutDialog(false)}
-      >
+      <Dialog open={openLogoutDialog}>
         <DialogTitle>Confirm Logout</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -204,8 +196,19 @@ export default function Sidebar({ role }: { role: Role }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenLogoutDialog(false)}>Cancel</Button>
-          <Button onClick={handleLogout} color="error">
+          <Button
+            onClick={() => setOpenLogoutDialog(false)}
+            size="large"
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleLogout}
+            color="error"
+            size="large"
+            variant="contained"
+          >
             Logout
           </Button>
         </DialogActions>

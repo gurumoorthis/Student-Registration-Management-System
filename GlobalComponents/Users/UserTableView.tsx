@@ -20,6 +20,8 @@ import {
   IconButton,
   TablePagination,
   TableSortLabel,
+  Box,
+  Tab,
 } from "@mui/material";
 import {
   Dialog,
@@ -29,7 +31,7 @@ import {
 } from "@mui/material";
 import { TextField, Button, FormControl } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import type { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
@@ -38,12 +40,12 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import moment from "moment";
 import { toast } from "sonner";
 import { useAppContext } from "@/app/context/AppContext";
-import { RoleType } from "@/enums";
+import { RoleType, UserStatus } from "@/enums";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { getToastOptions } from "@/utils/getToastOptions";
 import { departments } from "@/utils/constants";
-import { Department, Gender, Order, Student } from "@/types";
+import { Department, Gender, Order, User } from "@/types";
 import {
   addStudent,
   deleteStudent,
@@ -52,34 +54,47 @@ import {
 } from "@/redux/slice/StudentSlice";
 import TableSkeletonLoader from "@/GlobalComponents/TableSkeletonLoader";
 import { StyledFabButton } from "@/GlobalComponents/StyledComponent";
+import { fetchUsers } from "@/redux/slice/UserSlice";
+import { toTitleCase } from "@/utils/toTileCase";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
 
 const tableHeader = [
   { label: "S.No", key: "sno", sortable: false },
   { label: "Name", key: "name", sortable: true },
   { label: "Email", key: "email", sortable: true },
   { label: "Phone", key: "phone", sortable: true },
-  { label: "Date of Birth", key: "dob", sortable: true },
-  { label: "Gender", key: "gender", sortable: true },
-  { label: "Blood Group", key: "blood_group", sortable: true },
-  { label: "Department", key: "department", sortable: true },
+  { label: "Status", key: "status", sortable: true },
+  { label: "Role", key: "role_id", sortable: true },
   { label: "Created At", key: "created_at", sortable: true },
   { label: "Actions", key: "actions", sortable: false },
 ];
 
-export default function Students() {
+export default function UsersTableView({
+  status,
+  isLoading,
+  setIsLoading,
+  apiLoading,
+  setApiLoading,
+}: {
+  status: UserStatus;
+  isLoading: boolean;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
+  apiLoading: boolean;
+  setApiLoading: Dispatch<SetStateAction<boolean>>;
+}) {
   const dispatch = useAppDispatch();
   const { userDetails } = useSelector((state: RootState) => state.AUTH);
-  const { students, total } = useSelector((state: RootState) => state.STUDENT);
+  const { users, total } = useSelector((state: RootState) => state.USERS);
   const { setLoading, showCatchError } = useAppContext();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+
   const [page, setPage] = useState(0);
   const [isEdit, setIsEdit] = useState(false);
   const [currentStudentId, setCurrentStudentId] = useState("");
   const [fetchData, setFetchData] = useState(true);
   const [openDelete, setOpenDelete] = useState(false);
-  const [studentList, setStudentList] = useState<Student[]>(students);
+  const [studentList, setStudentList] = useState<User[]>(users);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -91,16 +106,10 @@ export default function Students() {
   const [parentContact, setParentContact] = useState("");
   const [bloodGroup, setBloodGroup] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sortBy, setSortBy] = useState<keyof Student>("created_at");
+  const [sortBy, setSortBy] = useState<keyof User>("created_at");
   const [order, setOrder] = useState<Order>("desc");
 
-  const handleAdd = () => {
-    setIsDialogOpen(true);
-    setIsEdit(false);
-    setCurrentStudentId("");
-  };
-
-  const handleEdit = (student: Student) => {
+  const handleEdit = (student: User) => {
     setCurrentStudentId(student.id);
     setIsEdit(true);
     setIsDialogOpen(true);
@@ -123,7 +132,7 @@ export default function Students() {
   const handleUpdate = async () => {
     setLoading(true);
     try {
-      const updates: Partial<Student> = {
+      const updates: Partial<User> = {
         name,
         email,
         phone,
@@ -136,7 +145,7 @@ export default function Students() {
         blood_group: bloodGroup,
       };
       await dispatch(updateStudent({ id: currentStudentId, updates })).unwrap();
-      toast.success("Student updated successfully!", getToastOptions());
+      toast.success("User updated successfully!", getToastOptions());
       refreshData();
     } catch (error) {
       showCatchError(error as Error);
@@ -145,7 +154,7 @@ export default function Students() {
     }
   };
 
-  const handleOpenDelete = (student: Student) => {
+  const handleOpenDelete = (student: User) => {
     setCurrentStudentId(student.id);
     setOpenDelete(true);
   };
@@ -154,7 +163,7 @@ export default function Students() {
     setLoading(true);
     try {
       await dispatch(deleteStudent(currentStudentId)).unwrap();
-      toast.success("Student deleted successfully!", getToastOptions());
+      toast.success("User deleted successfully!", getToastOptions());
       setFetchData(true);
       setOpenDelete(false);
       setCurrentStudentId("");
@@ -168,22 +177,29 @@ export default function Students() {
   useEffect(() => {
     if (fetchData) {
       const loadData = async () => {
-        setIsLoading(true);
+        setApiLoading(true);
         try {
           const response = await dispatch(
-            fetchStudents({ page: page + 1, limit: rowsPerPage, sortBy, order })
+            fetchUsers({
+              page: page + 1,
+              limit: rowsPerPage,
+              sortBy,
+              order,
+              status,
+            })
           ).unwrap();
           setStudentList(response?.data);
         } catch (error) {
           showCatchError(error as Error);
         } finally {
-          setIsLoading(false);
+          setApiLoading(false);
           setFetchData(false);
+          setIsLoading(false);
         }
       };
       loadData();
     }
-  }, [dispatch, fetchData, page, rowsPerPage, sortBy, order]);
+  }, [dispatch, fetchData, page, rowsPerPage, sortBy, order, status]);
 
   const validateForm = () => {
     if (
@@ -222,7 +238,7 @@ export default function Students() {
           blood_group: bloodGroup,
         })
       ).unwrap();
-      toast.success("Student created successfully", getToastOptions());
+      toast.success("User created successfully", getToastOptions());
       handleReset();
     } catch (error) {
       showCatchError(error as Error);
@@ -273,19 +289,14 @@ export default function Students() {
   };
 
   const handleColumnSort = (orderBy: string) => {
-    setSortBy(orderBy as keyof Student);
+    setSortBy(orderBy as keyof User);
     setOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     setFetchData(true);
   };
 
   return (
     <Paper sx={{ borderRadius: 3 }} component={Stack} className="flex-1">
-      <Stack direction="row" justifyContent="end" sx={{ p: 1 }}>
-        <StyledFabButton color="primary" onClick={handleAdd}>
-          <AddRoundedIcon fontSize="small" />
-        </StyledFabButton>
-      </Stack>
-      {isLoading ? (
+      {isLoading || apiLoading ? (
         <TableSkeletonLoader rows={5} columns={5} />
       ) : (
         <Stack sx={{ flex: 1 }}>
@@ -297,7 +308,10 @@ export default function Students() {
                     return (
                       <TableCell
                         key={headCell.key}
-                        sx={{ backgroundColor: "#c1c9d0bf", fontWeight: "600" }}
+                        sx={{
+                          backgroundColor: "#c1c9d0bf",
+                          fontWeight: "600",
+                        }}
                         align="center"
                       >
                         {headCell.sortable ? (
@@ -329,98 +343,94 @@ export default function Students() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {studentList.map((student, index) => (
-                  <TableRow key={student.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.email}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.phone}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.dob &&
-                          moment(student.dob).format("DD-MM-yyyy")}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.gender}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.blood_group}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.department}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography noWrap variant="subtitle2">
-                        {student.created_at &&
-                          moment(student.created_at).format("DD MMM yyyy")}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Stack direction="row" justifyContent="center" gap={1}>
-                        <StyledFabButton
-                          color="secondary"
-                          onClick={() => handleEdit(student)}
-                        >
-                          <CreateRoundedIcon fontSize="small" />
-                        </StyledFabButton>
-                        <StyledFabButton
-                          color="warning"
-                          // onClick={() => handleOpenDelete(student)}
-                        >
-                          <InfoRoundedIcon fontSize="small" />
-                        </StyledFabButton>
-                        {userDetails.role === RoleType.SUPER_ADMIN && (
+                {studentList.length > 0 ? (
+                  studentList.map((student, index) => (
+                    <TableRow key={student.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell align="center">
+                        <Typography noWrap variant="subtitle2">
+                          {student.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography noWrap variant="subtitle2">
+                          {student.email}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography noWrap variant="subtitle2">
+                          {student.phone}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography noWrap variant="subtitle2">
+                          {toTitleCase(student.status)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography noWrap variant="subtitle2">
+                          {toTitleCase(student?.roles?.name)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography noWrap variant="subtitle2">
+                          {student.created_at &&
+                            moment(student.created_at).format("DD MMM yyyy")}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Stack direction="row" justifyContent="center" gap={1}>
                           <StyledFabButton
-                            color="error"
-                            onClick={() => handleOpenDelete(student)}
+                            color="secondary"
+                            onClick={() => handleEdit(student)}
                           >
-                            <DeleteRoundedIcon fontSize="small" />
+                            <CreateRoundedIcon fontSize="small" />
                           </StyledFabButton>
-                        )}
-                      </Stack>
+                          <StyledFabButton
+                            color="warning"
+                            // onClick={() => handleOpenDelete(student)}
+                          >
+                            <InfoRoundedIcon fontSize="small" />
+                          </StyledFabButton>
+                          {userDetails.role === RoleType.SUPER_ADMIN && (
+                            <StyledFabButton
+                              color="error"
+                              onClick={() => handleOpenDelete(student)}
+                            >
+                              <DeleteRoundedIcon fontSize="small" />
+                            </StyledFabButton>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={tableHeader.length} align="center">
+                      <Typography fontWeight="bold" variant="h6">
+                        No data found
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>
-          {studentList.length === 0 ? (
-            <Typography>No data found</Typography>
-          ) : (
-            <TablePagination
-              rowsPerPageOptions={[10, 20, 40]}
-              component="div"
-              count={total}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              sx={{
-                backgroundColor: "#c1c9d0bf",
-                borderBottomLeftRadius: 12,
-                borderBottomRightRadius: 12,
-              }}
-            />
-          )}
+          <TablePagination
+            disabled={studentList.length === 0}
+            rowsPerPageOptions={[10, 20, 40]}
+            component="div"
+            count={total}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              backgroundColor: "#c1c9d0bf",
+              borderBottomLeftRadius: 12,
+              borderBottomRightRadius: 12,
+            }}
+          />
         </Stack>
       )}
       {/* Add / Edit Dialog */}
@@ -442,7 +452,7 @@ export default function Students() {
           <CloseRoundedIcon />
         </IconButton>
         <DialogContent dividers>
-          {/* ===== Basic Student Details ===== */}
+          {/* ===== Basic User Details ===== */}
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField

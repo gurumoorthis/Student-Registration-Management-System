@@ -16,8 +16,9 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useAppContext } from "@/app/context/AppContext";
 import { Menu } from "@mui/icons-material";
+import { getRoleAvatarColor } from "@/utils/getRoleAvatarColor";
 
-export const AppHeader = memo(({ title }: { title: string }) => {
+export const AppHeader = ({ title }: { title: string }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { userDetails } = useSelector((state: RootState) => state.AUTH);
@@ -45,16 +46,21 @@ export const AppHeader = memo(({ title }: { title: string }) => {
             {title}
           </Typography>
         </Stack>
-        <Stack direction="row" gap={1}>
-          <Avatar />
-          <Box>
-            <Typography variant="subtitle1">{userDetails.name}</Typography>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Avatar
+            sx={{ bgcolor: getRoleAvatarColor[userDetails?.role ?? "#9E9E9E"] }}
+          >
+            {userDetails?.name?.split("")[0]}
+          </Avatar>
+          <Stack>
+            <Typography variant="subtitle2">{userDetails.name}</Typography>
             <Typography variant="caption" color="text.secondary">
-              {toTitleCase(userDetails.roles?.name)}
+              {toTitleCase(userDetails.role)}
             </Typography>
-          </Box>
+          </Stack>
         </Stack>
       </Toolbar>
     </AppBar>
   );
-});
+};
+export default memo(AppHeader);

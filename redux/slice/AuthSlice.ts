@@ -1,41 +1,46 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/supabaseClient";
-import secureLocalStorage from "react-secure-storage";
-import type { Role } from "@/utils/types";
+import { RoleType, UserStatus } from "@/enums";
+import { RoleData } from "@/types";
 
-export interface User {
+interface UserDetailsPops {
   id: string;
   name: string;
   email: string;
-  password: string;
   phone: string;
-  created_at: Date;
-  roles: { name: Role; id: string };
+  status: UserStatus;
   role_id: string;
+  role: RoleType;
 }
-
-export interface RoleProps {
+interface UserDetailsResponsePops {
   id: string;
-  name: "admin" | "teacher";
+  name: string;
+  email: string;
+  phone: string;
+  status: UserStatus;
+  role_id: string;
+  roles: {
+    name: RoleType;
+    id: string;
+  };
 }
 
 interface UserState {
-  userDetails: User;
+  userDetails: UserDetailsPops;
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
-  roles: RoleProps[];
+  roles: RoleData[];
 }
 
 const initialState: UserState = {
   userDetails: {
-    roles: { name: "teacher", id: "" },
-    email: "",
     id: "",
     name: "",
+    email: "",
     phone: "",
-    password: "",
-    created_at: new Date(),
+    status: UserStatus.WAITING,
     role_id: "",
+    role: RoleType.ADMIN,
   },
   status: "idle",
   error: null,
@@ -43,7 +48,7 @@ const initialState: UserState = {
 };
 
 export const getAllRoles = createAsyncThunk<
-  RoleProps[],
+  RoleData[],
   void,
   { rejectValue: string }
 >("roles/getAll", async (_, { rejectWithValue }) => {
@@ -53,35 +58,38 @@ export const getAllRoles = createAsyncThunk<
     return rejectWithValue(error.message);
   }
 
-  return data as RoleProps[];
+  return data as RoleData[];
 });
 
-export const getUserById = createAsyncThunk<
-  User,
+export const getUserByAuthId = createAsyncThunk<
+  UserDetailsResponsePops,
   string,
-  { rejectValue: string }
->("users/getById", async (userId, { rejectWithValue }) => {
+  { rejectValue: Error }
+>("users/getByAuthId", async (authId, { rejectWithValue }) => {
   const { data, error } = await supabase
     .from("users")
     .select(
       `
-    *,
-    roles (*)
-  `
+      id,
+      email,
+      name,
+      status,
+      phone,
+      role_id,
+      roles (id, name)
+    `
     )
-    .eq("id", userId)
+    .eq("auth_id", authId)
     .single();
 
-  if (error) {
-    return rejectWithValue(error.message);
-  }
-  secureLocalStorage.setItem("userRole", data?.roles?.name);
-  document.cookie = `role=${data?.roles?.name}; Path=/; SameSite=Strict;`;
-  return data as User;
+  if (error) return rejectWithValue(error);
+  // if (!data) return rejectWithValue("No user found for this authId");
+
+  return data as UserDetailsResponsePops;
 });
 
 export const getAllUsers = createAsyncThunk<
-  User[],
+  UserDetailsPops[],
   string | undefined,
   { rejectValue: string }
 >("users/getAll", async (roleName, { rejectWithValue }) => {
@@ -97,12 +105,12 @@ export const getAllUsers = createAsyncThunk<
   if (error) {
     return rejectWithValue(error.message);
   }
-  return data as User[];
+  return data as UserDetailsPops[];
 });
 
 export const addUser = createAsyncThunk<
-  User,
-  Partial<User>,
+  UserDetailsPops,
+  Partial<UserDetailsPops>,
   { rejectValue: string }
 >("users/add", async (newUser, { rejectWithValue }) => {
   const { data, error } = await supabase
@@ -114,12 +122,12 @@ export const addUser = createAsyncThunk<
   if (error) {
     return rejectWithValue(error.message);
   }
-  return data as User;
+  return data as UserDetailsPops;
 });
 
 export const updateUser = createAsyncThunk<
-  User,
-  { id: string; updates: Partial<User> },
+  UserDetailsPops,
+  { id: string; updates: Partial<UserDetailsPops> },
   { rejectValue: string }
 >("users/update", async ({ id, updates }, { rejectWithValue }) => {
   const { data, error } = await supabase
@@ -132,7 +140,7 @@ export const updateUser = createAsyncThunk<
   if (error) {
     return rejectWithValue(error.message);
   }
-  return data as User;
+  return data as UserDetailsPops;
 });
 
 export const deleteUser = createAsyncThunk<
@@ -165,17 +173,17 @@ const authSlice = createSlice({
         state.status = "error";
         state.error = action.payload as string;
       })
-      .addCase(getUserById.pending, (state) => {
+      .addCase(getUserByAuthId.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
-      .addCase(getUserById.fulfilled, (state, action) => {
+      .addCase(getUserByAuthId.fulfilled, (state, action) => {
+        const userDetails = action.payload;
         state.status = "success";
-        state.userDetails = action.payload;
-      })
-      .addCase(getUserById.rejected, (state, action) => {
-        state.status = "error";
-        state.error = action.payload as string;
+        state.userDetails = {
+          ...action.payload,
+          role: userDetails?.roles?.name,
+        };
       });
   },
 });

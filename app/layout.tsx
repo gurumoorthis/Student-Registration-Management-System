@@ -15,11 +15,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Toaster />
-        <ReduxProvider>
-          <AppProvider>
-            <ThemeProvider theme={theme}>{children}</ThemeProvider>
-          </AppProvider>
-        </ReduxProvider>
+        <ThemeProvider theme={theme}>
+          <ReduxProvider>
+            <AppProvider>{children}</AppProvider>
+          </ReduxProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

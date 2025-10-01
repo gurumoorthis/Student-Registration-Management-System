@@ -26,7 +26,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: "none",
-          letterSpacing: "0.1px",
+          letterSpacing: "0.4px",
           boxShadow: "none",
         },
       },
@@ -43,6 +43,34 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: "none",
+        },
+      },
+    },
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: {
+          padding: "16px 20px",
+        },
+      },
+    },
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          padding: "20px",
+        },
+      },
+    },
+    MuiDialogActions: {
+      styleOverrides: {
+        root: {
+          padding: "20px",
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: "none",
         },
       },
     },
