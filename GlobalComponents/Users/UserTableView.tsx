@@ -10,53 +10,46 @@ import {
   Paper,
   Stack,
   Typography,
-  Grid,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  InputAdornment,
-  Autocomplete,
   IconButton,
   TablePagination,
   TableSortLabel,
-  Box,
-  Tab,
-} from "@mui/material";
-import {
+  InputAdornment,
   Dialog,
   DialogContent,
   DialogTitle,
   DialogActions,
+  TextField,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Autocomplete,
 } from "@mui/material";
-import { TextField, Button, FormControl } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useAppDispatch } from "@/redux/hooks";
-import type { RootState } from "@/redux/store";
-import { useSelector } from "react-redux";
 import CreateRoundedIcon from "@mui/icons-material/CreateRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import moment from "moment";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useAppDispatch } from "@/redux/hooks";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 import { toast } from "sonner";
+import { supabase } from "@/supabaseClient";
 import { useAppContext } from "@/app/context/AppContext";
 import { RoleType, UserStatus } from "@/enums";
-import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { getToastOptions } from "@/utils/getToastOptions";
-import { departments } from "@/utils/constants";
-import { Department, Gender, Order, User } from "@/types";
+import { User, Order, Status } from "@/types";
 import {
-  addStudent,
-  deleteStudent,
-  fetchStudents,
-  updateStudent,
-} from "@/redux/slice/StudentSlice";
+  addUser,
+  deleteUser,
+  fetchUsers,
+  updateUser,
+} from "@/redux/slice/UserSlice";
 import TableSkeletonLoader from "@/GlobalComponents/TableSkeletonLoader";
 import { StyledFabButton } from "@/GlobalComponents/StyledComponent";
-import { fetchUsers } from "@/redux/slice/UserSlice";
 import { toTitleCase } from "@/utils/toTileCase";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { departments, statusList } from "@/utils/constants";
 
 const tableHeader = [
   { label: "S.No", key: "sno", sortable: false },
@@ -75,58 +68,56 @@ export default function UsersTableView({
   setIsLoading,
   apiLoading,
   setApiLoading,
+  isDialogOpen,
+  setIsDialogOpen,
+  isEdit,
+  setIsEdit,
+  currentUserId,
+  setCurrentUserId,
+  fetchData,
+  setFetchData,
 }: {
   status: UserStatus;
   isLoading: boolean;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   apiLoading: boolean;
   setApiLoading: Dispatch<SetStateAction<boolean>>;
+  isDialogOpen: boolean;
+  setIsDialogOpen: Dispatch<SetStateAction<boolean>>;
+  isEdit: boolean;
+  setIsEdit: Dispatch<SetStateAction<boolean>>;
+  currentUserId: string;
+  setCurrentUserId: Dispatch<SetStateAction<string>>;
+  fetchData: boolean;
+  setFetchData: Dispatch<SetStateAction<boolean>>;
 }) {
   const dispatch = useAppDispatch();
   const { userDetails } = useSelector((state: RootState) => state.AUTH);
   const { users, total } = useSelector((state: RootState) => state.USERS);
   const { setLoading, showCatchError } = useAppContext();
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const [page, setPage] = useState(0);
-  const [isEdit, setIsEdit] = useState(false);
-  const [currentStudentId, setCurrentStudentId] = useState("");
-  const [fetchData, setFetchData] = useState(true);
   const [openDelete, setOpenDelete] = useState(false);
-  const [studentList, setStudentList] = useState<User[]>(users);
+  const [userList, setUserList] = useState<User[]>(users);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState("");
-  const [address, setAddress] = useState("");
-  const [department, setDepartment] = useState<Department | null>(null);
-  const [gender, setGender] = useState<Gender>("");
-  const [parentName, setParentName] = useState("");
-  const [parentContact, setParentContact] = useState("");
-  const [bloodGroup, setBloodGroup] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [autoVerify, setAutoVerify] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState<keyof User>("created_at");
   const [order, setOrder] = useState<Order>("desc");
+  const [userStatus, setUserStatus] = useState<Status | null>(null);
 
-  const handleEdit = (student: User) => {
-    setCurrentStudentId(student.id);
+  const handleEdit = (user: User) => {
+    setCurrentUserId(user.id);
     setIsEdit(true);
     setIsDialogOpen(true);
-    setName(student.name || "");
-    setEmail(student.email || "");
-    setPhone(student.phone || "");
-    setDob(student.dob || "");
-    setAddress(student.address || "");
-    setDepartment(
-      student.department
-        ? departments.find((d) => d.value === student.department) || null
-        : null
-    );
-    setGender(student.gender || "");
-    setParentName(student.parent_name || "");
-    setParentContact(student.parent_contact || "");
-    setBloodGroup(student.blood_group || "");
+    setName(user.name);
+    setEmail(user.email);
+    setPhone(user.phone);
+    setPassword(user.password);
   };
 
   const handleUpdate = async () => {
@@ -136,15 +127,9 @@ export default function UsersTableView({
         name,
         email,
         phone,
-        dob,
-        address,
-        department: department?.value,
-        gender,
-        parent_name: parentName,
-        parent_contact: parentContact,
-        blood_group: bloodGroup,
+        ...(userStatus && { status: userStatus?.value }),
       };
-      await dispatch(updateStudent({ id: currentStudentId, updates })).unwrap();
+      await dispatch(updateUser({ id: currentUserId, updates })).unwrap();
       toast.success("User updated successfully!", getToastOptions());
       refreshData();
     } catch (error) {
@@ -154,19 +139,55 @@ export default function UsersTableView({
     }
   };
 
-  const handleOpenDelete = (student: User) => {
-    setCurrentStudentId(student.id);
+  const handleOpenDelete = (user: User) => {
+    setCurrentUserId(user.id);
     setOpenDelete(true);
   };
 
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await dispatch(deleteStudent(currentStudentId)).unwrap();
+      await dispatch(deleteUser(currentUserId)).unwrap();
       toast.success("User deleted successfully!", getToastOptions());
       setFetchData(true);
       setOpenDelete(false);
-      setCurrentStudentId("");
+      setCurrentUserId("");
+    } catch (error) {
+      showCatchError(error as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Create new user with Supabase Auth
+  const handleCreate = async () => {
+    setLoading(true);
+    try {
+      // Step 1: Sign up user in Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (signUpError) throw signUpError;
+
+      const authUser = data.user;
+      if (!authUser) throw new Error("Failed to create auth user");
+
+      // Step 2: Add to 'users' table
+      await dispatch(
+        addUser({
+          auth_id: authUser.id,
+          name,
+          email,
+          phone,
+          password,
+          status: UserStatus.APPROVED,
+        })
+      ).unwrap();
+
+      toast.success("User created successfully!", getToastOptions());
+      handleReset();
+      refreshData();
     } catch (error) {
       showCatchError(error as Error);
     } finally {
@@ -186,9 +207,10 @@ export default function UsersTableView({
               sortBy,
               order,
               status,
+              currentUserId: userDetails.id,
             })
           ).unwrap();
-          setStudentList(response?.data);
+          setUserList(response?.data);
         } catch (error) {
           showCatchError(error as Error);
         } finally {
@@ -201,78 +223,18 @@ export default function UsersTableView({
     }
   }, [dispatch, fetchData, page, rowsPerPage, sortBy, order, status]);
 
-  const validateForm = () => {
-    if (
-      !name ||
-      !email ||
-      !phone ||
-      !dob ||
-      !address ||
-      !department ||
-      !gender ||
-      !parentName ||
-      !parentContact ||
-      !bloodGroup
-    ) {
-      toast.error("All fields are required", getToastOptions());
-      return false;
-    }
-    return true;
-  };
-
-  const handleCreate = async () => {
-    if (!validateForm()) return;
-    setLoading(true);
-    try {
-      await dispatch(
-        addStudent({
-          name,
-          email,
-          phone,
-          dob,
-          address,
-          department: department?.value || "",
-          gender,
-          parent_name: parentName,
-          parent_contact: parentContact,
-          blood_group: bloodGroup,
-        })
-      ).unwrap();
-      toast.success("User created successfully", getToastOptions());
-      handleReset();
-    } catch (error) {
-      showCatchError(error as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshData = () => {
-    handleReset();
-    setFetchData(true);
-    setIsDialogOpen(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEdit) {
-      handleUpdate();
-    } else {
-      handleCreate();
-    }
+    if (isEdit) handleUpdate();
+    else handleCreate();
   };
 
   const handleReset = () => {
     setName("");
     setEmail("");
     setPhone("");
-    setDob("");
-    setAddress("");
-    setDepartment(null);
-    setGender("");
-    setParentName("");
-    setParentContact("");
-    setBloodGroup("");
+    setPassword("");
+    setAutoVerify(true);
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -294,6 +256,11 @@ export default function UsersTableView({
     setFetchData(true);
   };
 
+  const refreshData = () => {
+    setIsDialogOpen(false);
+    setFetchData(true);
+  };
+
   return (
     <Paper sx={{ borderRadius: 3 }} component={Stack} className="flex-1">
       {isLoading || apiLoading ? (
@@ -304,31 +271,21 @@ export default function UsersTableView({
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  {tableHeader.map((headCell) => {
-                    return (
-                      <TableCell
-                        key={headCell.key}
-                        sx={{
-                          backgroundColor: "#c1c9d0bf",
-                          fontWeight: "600",
-                        }}
-                        align="center"
-                      >
-                        {headCell.sortable ? (
-                          <TableSortLabel
-                            active={sortBy === headCell.key}
-                            direction={sortBy === headCell.key ? order : "asc"}
-                            onClick={() => handleColumnSort(headCell.key)}
-                          >
-                            <Typography
-                              noWrap
-                              fontWeight="bold"
-                              variant="subtitle2"
-                            >
-                              {headCell.label}
-                            </Typography>
-                          </TableSortLabel>
-                        ) : (
+                  {tableHeader.map((headCell) => (
+                    <TableCell
+                      key={headCell.key}
+                      sx={{
+                        backgroundColor: "#c1c9d0bf",
+                        fontWeight: "600",
+                      }}
+                      align="center"
+                    >
+                      {headCell.sortable ? (
+                        <TableSortLabel
+                          active={sortBy === headCell.key}
+                          direction={sortBy === headCell.key ? order : "asc"}
+                          onClick={() => handleColumnSort(headCell.key)}
+                        >
                           <Typography
                             noWrap
                             fontWeight="bold"
@@ -336,66 +293,52 @@ export default function UsersTableView({
                           >
                             {headCell.label}
                           </Typography>
-                        )}
-                      </TableCell>
-                    );
-                  })}
+                        </TableSortLabel>
+                      ) : (
+                        <Typography
+                          noWrap
+                          fontWeight="bold"
+                          variant="subtitle2"
+                        >
+                          {headCell.label}
+                        </Typography>
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {studentList.length > 0 ? (
-                  studentList.map((student, index) => (
-                    <TableRow key={student.id}>
+                {userList.length > 0 ? (
+                  userList.map((user, index) => (
+                    <TableRow key={user.id}>
                       <TableCell>{index + 1}</TableCell>
+                      <TableCell align="center">{user.name}</TableCell>
+                      <TableCell align="center">{user.email}</TableCell>
+                      <TableCell align="center">{user.phone}</TableCell>
                       <TableCell align="center">
-                        <Typography noWrap variant="subtitle2">
-                          {student.name}
-                        </Typography>
+                        {toTitleCase(user.status)}
                       </TableCell>
                       <TableCell align="center">
-                        <Typography noWrap variant="subtitle2">
-                          {student.email}
-                        </Typography>
+                        {toTitleCase(user?.roles?.name)}
                       </TableCell>
                       <TableCell align="center">
-                        <Typography noWrap variant="subtitle2">
-                          {student.phone}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography noWrap variant="subtitle2">
-                          {toTitleCase(student.status)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography noWrap variant="subtitle2">
-                          {toTitleCase(student?.roles?.name)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography noWrap variant="subtitle2">
-                          {student.created_at &&
-                            moment(student.created_at).format("DD MMM yyyy")}
-                        </Typography>
+                        {moment(user.created_at).format("DD MMM yyyy")}
                       </TableCell>
                       <TableCell align="center">
                         <Stack direction="row" justifyContent="center" gap={1}>
                           <StyledFabButton
                             color="secondary"
-                            onClick={() => handleEdit(student)}
+                            onClick={() => handleEdit(user)}
                           >
                             <CreateRoundedIcon fontSize="small" />
                           </StyledFabButton>
-                          <StyledFabButton
-                            color="warning"
-                            // onClick={() => handleOpenDelete(student)}
-                          >
+                          <StyledFabButton color="warning">
                             <InfoRoundedIcon fontSize="small" />
                           </StyledFabButton>
                           {userDetails.role === RoleType.SUPER_ADMIN && (
                             <StyledFabButton
                               color="error"
-                              onClick={() => handleOpenDelete(student)}
+                              onClick={() => handleOpenDelete(user)}
                             >
                               <DeleteRoundedIcon fontSize="small" />
                             </StyledFabButton>
@@ -417,7 +360,7 @@ export default function UsersTableView({
             </Table>
           </TableContainer>
           <TablePagination
-            disabled={studentList.length === 0}
+            disabled={userList.length === 0}
             rowsPerPageOptions={[10, 20, 40]}
             component="div"
             count={total}
@@ -433,138 +376,98 @@ export default function UsersTableView({
           />
         </Stack>
       )}
-      {/* Add / Edit Dialog */}
+
+      {/* ➕ Add / Edit Dialog */}
       <Dialog
-        maxWidth="md"
+        maxWidth="sm"
+        fullWidth
         open={isDialogOpen}
         component="form"
         onSubmit={handleSubmit}
       >
-        <DialogTitle>{isEdit ? "Update student" : "Add student"}</DialogTitle>
+        <DialogTitle>{isEdit ? "Update user" : "Add user"}</DialogTitle>
         <IconButton
           onClick={() => setIsDialogOpen(false)}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-          }}
+          sx={{ position: "absolute", right: 8, top: 8 }}
         >
           <CloseRoundedIcon />
         </IconButton>
         <DialogContent dividers>
-          {/* ===== Basic User Details ===== */}
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                fullWidth
-                variant="standard"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Date of Birth"
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }}
-                required
-                fullWidth
-                variant="standard"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl>
-                <FormLabel>Gender</FormLabel>
-                <RadioGroup
-                  row
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value as Gender)}
-                >
-                  <FormControlLabel
-                    value="Male"
-                    control={<Radio />}
-                    label="Male"
-                  />
-                  <FormControlLabel
-                    value="Female"
-                    control={<Radio />}
-                    label="Female"
-                  />
-                  <FormControlLabel
-                    value="Other"
-                    control={<Radio />}
-                    label="Other"
-                  />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Blood Group"
-                value={bloodGroup}
-                onChange={(e) => setBloodGroup(e.target.value)}
-                required
-                fullWidth
-                variant="standard"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                fullWidth
-                variant="standard"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                fullWidth
-                variant="standard"
-                slotProps={{
-                  htmlInput: {
-                    maxLength: 10,
-                    minLength: 10,
-                  },
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Typography>+91</Typography>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                label="Address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                required
-                multiline
-                fullWidth
-                rows={2}
-                variant="standard"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack rowGap={3}>
+            <TextField
+              label="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              fullWidth
+              variant="standard"
+              focused
+            />
+            <TextField
+              label="Phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              fullWidth
+              variant="standard"
+              slotProps={{
+                htmlInput: {
+                  maxLength: 10,
+                  minLength: 10,
+                },
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Typography>+91</Typography>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              required
+              variant="standard"
+              label="Email Address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              required
+              disabled={isEdit}
+              variant="standard"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value.trim())}
+              slotProps={{
+                htmlInput: {
+                  minLength: 6,
+                },
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        edge="end"
+                        disabled={isEdit}
+                      >
+                        {showPassword ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            {isEdit && (
               <Autocomplete
                 fullWidth
-                options={departments}
-                value={department}
-                onChange={(_, newValue) => setDepartment(newValue)}
+                options={statusList.filter((sts) => sts.value !== status)}
+                value={userStatus}
+                onChange={(_, newValue) => setUserStatus(newValue)}
                 getOptionLabel={(option) => option.label}
                 isOptionEqualToValue={(option, selectedValue) =>
                   option.value === selectedValue.value
@@ -572,68 +475,37 @@ export default function UsersTableView({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    required={department === null}
-                    label="Department"
+                    required={userStatus === null}
+                    label="Status"
                     variant="standard"
                   />
                 )}
               />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Parent/Guardian Name"
-                value={parentName}
-                onChange={(e) => setParentName(e.target.value)}
-                required
-                fullWidth
-                variant="standard"
+            )}
+            {status === UserStatus.APPROVED && (
+              <FormControlLabel
+                control={<Checkbox checked />}
+                disabled
+                label="Mark as verified"
               />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Parent/Guardian Contact"
-                value={parentContact}
-                onChange={(e) => setParentContact(e.target.value)}
-                required
-                fullWidth
-                variant="standard"
-                slotProps={{
-                  htmlInput: {
-                    maxLength: 10,
-                    minLength: 10,
-                  },
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Typography>+91</Typography>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
+            )}
+          </Stack>
         </DialogContent>
         <DialogActions sx={{ mt: 2 }}>
-          <Button
-            type="button"
-            variant="outlined"
-            size="large"
-            onClick={handleReset}
-          >
+          <Button type="button" variant="outlined" onClick={handleReset}>
             Clear
           </Button>
-          <Button type="submit" variant="contained" size="large">
+          <Button type="submit" variant="contained">
             {isEdit ? "Update" : "Add"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Delete Dialog */}
+      {/* 🗑️ Delete Dialog */}
       <Dialog open={openDelete}>
-        <DialogTitle>Delete student</DialogTitle>
+        <DialogTitle>Delete user</DialogTitle>
         <DialogContent dividers>
-          Are you sure you want to delete this student?
+          Are you sure you want to delete this user?
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDelete(false)} variant="outlined">

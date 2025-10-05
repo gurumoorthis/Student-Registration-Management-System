@@ -1,103 +1,86 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { Button, Typography, Stack, Paper } from "@mui/material";
+import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
+import { useRouter } from "next/navigation";
+
+// SwiperJS imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import StudentLayout from "@/GlobalComponents/layout/StudentLayout";
+
+const studentSlides = [
+  {
+    title: "Easy Online Admission",
+    description:
+      "Fill out the admission form online and track your status easily.",
+  },
+  {
+    title: "Track Student Progress",
+    description:
+      "Monitor your grades, attendance, and academic progress in one place.",
+  },
+  {
+    title: "Secure Data Management",
+    description:
+      "All student data is safe, secure, and easily accessible anytime.",
+  },
+];
+
+export default function LandingPage() {
+  const router = useRouter();
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <StudentLayout>
+      <Stack spacing={4}>
+        <Typography
+          variant="h2"
+          fontWeight="bold"
+          sx={{
+            background: "linear-gradient(90deg, #FF7E5F, #FEB47B)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          Welcome to EduPortal
+        </Typography>
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          autoplay={{ delay: 4000 }}
+          pagination={{ clickable: true }}
+          spaceBetween={30}
+          loop
+        >
+          {studentSlides.map((slide, index) => (
+            <SwiperSlide key={index}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  borderRadius: 4,
+                  textAlign: "center",
+                }}
+              >
+                <Typography variant="h6" fontWeight="bold">
+                  {slide.title}
+                </Typography>
+                <Typography variant="body1">{slide.description}</Typography>
+              </Paper>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        <Stack alignItems="center">
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<EmojiPeopleIcon />}
+            onClick={() => router.push("/student/register")}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            Admission Form
+          </Button>
+        </Stack>
+      </Stack>
+    </StudentLayout>
   );
 }

@@ -5,6 +5,13 @@ export interface Department {
   value: string;
 }
 
+// export type StatusType = "APPROVED" | "WAITING" | "STUDENT";
+
+export interface Status {
+  label: string;
+  value: UserStatus;
+}
+
 export interface RoleData {
   id: string;
   name: RoleType;

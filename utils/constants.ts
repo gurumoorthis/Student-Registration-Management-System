@@ -1,4 +1,5 @@
-import { Department } from "@/types";
+import { UserStatus } from "@/enums";
+import { Department, Status } from "@/types";
 
 export const ERROR_MESSAGES = {
   GENERIC: "Something went wrong. Please try again.",
@@ -30,4 +31,10 @@ export const departments: Department[] = [
   { label: "Dentistry (BDS)", value: "BDS" },
   { label: "Pharmacy (B.Pharm)", value: "PHARM" },
   { label: "Nursing", value: "NURSING" },
+];
+
+export const statusList: Status[] = [
+  { label: "Approve", value: UserStatus.APPROVED },
+  { label: "Wait", value: UserStatus.WAITING },
+  { label: "Reject", value: UserStatus.REJECTED },
 ];

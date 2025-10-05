@@ -1,5 +1,5 @@
 import AppHeader from "@/GlobalComponents/layout/AppHeader";
-import { ManagementBodyLayout } from "@/GlobalComponents/layout/ManagementBodyLayout";
+import ManagementBodyLayout from "@/GlobalComponents/layout/ManagementBodyLayout";
 import Students from "@/PageComponents/Students";
 
 export default function Home() {

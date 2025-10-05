@@ -56,7 +56,7 @@ type Role = keyof typeof sidebarItemsByRole;
 export default function Sidebar({ role }: { role: Role }) {
   console.log(role);
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
-  const { mobileOpen, setMobileOpen } = useAppContext();
+  const { mobileOpen, setMobileOpen, setLoading } = useAppContext();
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -66,7 +66,9 @@ export default function Sidebar({ role }: { role: Role }) {
   const items = sidebarItemsByRole[role];
 
   const handleLogout = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
+    setLoading(false);
     secureLocalStorage.clear();
     dispatch({ type: "RESET_APP" });
     clearAllCookies();

@@ -17,7 +17,6 @@ export default function ManagementLayout({
     "/management/dashboard",
     "/management/students",
     "/management/users",
-    "/management/settings",
   ];
 
   const showSidebar = sidebarPages.some((page) => pathname.startsWith(page));

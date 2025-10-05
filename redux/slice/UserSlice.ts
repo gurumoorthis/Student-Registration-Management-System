@@ -20,12 +20,16 @@ export const fetchUsers = createAsyncThunk<
     limit: number;
     sortBy: keyof User;
     order: "asc" | "desc";
-    status: string;
+    status?: string;
+    currentUserId: string;
   },
   { rejectValue: Error }
 >(
   "users/fetch",
-  async ({ page, limit, sortBy, order, status }, { rejectWithValue }) => {
+  async (
+    { page, limit, sortBy, order, status, currentUserId },
+    { rejectWithValue }
+  ) => {
     try {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
@@ -42,6 +46,7 @@ export const fetchUsers = createAsyncThunk<
         `,
           { count: "exact" }
         )
+        .neq("id", currentUserId) // 🚫 exclude logged-in user
         .range(from, to)
         .order(sortBy, { ascending: order === "asc" });
 

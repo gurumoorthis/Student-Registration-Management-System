@@ -16,6 +16,7 @@ const publicPaths = [
   "/api",
   "/favicon.ico",
   "/student/register",
+  "/",
 ];
 
 // Define allowed routes per role

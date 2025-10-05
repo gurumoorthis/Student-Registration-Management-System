@@ -6,8 +6,6 @@ import {
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import AuthReducer from "@/redux/slice/AuthSlice";
-import DashboardReducer from "@/redux/slice/DashboardSlice";
-import PolicyReducer from "@/redux/slice/PolicySlice";
 import StudentSlice from "@/redux/slice/StudentSlice";
 import UserSlice from "@/redux/slice/UserSlice";
 
@@ -19,9 +17,7 @@ const persistConfig = {
 
 const appReducer = combineReducers({
   AUTH: AuthReducer,
-  DASHBOARD: DashboardReducer,
   STUDENT: StudentSlice,
-  POLICY: PolicyReducer,
   USERS: UserSlice,
 });
 
