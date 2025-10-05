@@ -111,7 +111,7 @@ export default function UsersTableView({
   const [userStatus, setUserStatus] = useState<Status | null>(null);
 
   const handleEdit = (user: User) => {
-    setCurrentUserId(user.id);
+    setCurrentUserId(user?.id ?? "");
     setIsEdit(true);
     setIsDialogOpen(true);
     setName(user.name);
@@ -140,7 +140,7 @@ export default function UsersTableView({
   };
 
   const handleOpenDelete = (user: User) => {
-    setCurrentUserId(user.id);
+    setCurrentUserId(user?.id ?? "");
     setOpenDelete(true);
   };
 
@@ -319,7 +319,7 @@ export default function UsersTableView({
                         {toTitleCase(user.status)}
                       </TableCell>
                       <TableCell align="center">
-                        {toTitleCase(user?.roles?.name)}
+                        {toTitleCase(user?.roles?.name ?? "")}
                       </TableCell>
                       <TableCell align="center">
                         {moment(user.created_at).format("DD MMM yyyy")}

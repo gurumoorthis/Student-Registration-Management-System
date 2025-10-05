@@ -45,25 +45,41 @@ export const getUserByAuthId = createAsyncThunk<
   string,
   { rejectValue: Error }
 >("users/getByAuthId", async (authId, { rejectWithValue }) => {
-  const { data, error } = await supabase
-    .from("users")
-    .select(
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select(
+        `
+        id,
+        email,
+        name,
+        status,
+        phone,
+        role_id,
+        roles (id, name)
       `
-      id,
-      email,
-      name,
-      status,
-      phone,
-      role_id,
-      roles (id, name)
-    `
-    )
-    .eq("auth_id", authId)
-    .single();
+      )
+      .eq("auth_id", authId)
+      .single();
 
-  if (error) return rejectWithValue(error);
+    if (error) return rejectWithValue(error);
 
-  return data as UserDetailsResponsePops;
+    const roleObj = Array.isArray(data.roles) ? data.roles[0] : data.roles;
+
+    const formattedData: UserDetailsResponsePops = {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      phone: data.phone,
+      status: data.status,
+      role_id: data.role_id,
+      roles: roleObj as { id: string; name: RoleType }, // safe cast
+    };
+
+    return formattedData;
+  } catch (err) {
+    return rejectWithValue(err as Error);
+  }
 });
 
 const authSlice = createSlice({

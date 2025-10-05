@@ -37,14 +37,14 @@ export interface Student {
 }
 
 export interface User {
-  id: string;
+  id?: string;
   email: string;
   password: string;
-  role_id: string;
+  role_id?: string;
   status: UserStatus;
-  created_at: string;
+  created_at?: string;
   auth_id: string;
   name: string;
   phone: string;
-  roles: RoleData;
+  roles?: RoleData;
 }
