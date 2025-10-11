@@ -10,6 +10,9 @@ const theme = createTheme({
     // secondary: {
     //   main: "#9c27b0",
     // },
+    text: {
+      primary: "#0a2540",
+    },
   },
   typography: {
     fontFamily: "Inter, Roboto, sans-serif",
