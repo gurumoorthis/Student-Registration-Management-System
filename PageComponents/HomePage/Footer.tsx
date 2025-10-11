@@ -26,6 +26,7 @@ export default function Footer() {
         background: "#F5F5F5",
         backgroundImage: `url(${BacklightImage.src}),url(${ScatteredObject.src})`,
         backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
       }}
     >
       <Container maxWidth="lg">

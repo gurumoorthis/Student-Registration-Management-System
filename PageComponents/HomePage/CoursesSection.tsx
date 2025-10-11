@@ -77,6 +77,7 @@ export default function CoursesSection() {
       sx={{
         background: "#F5F5F5",
         backgroundImage: `url(${BacklightImage.src}),url(${ScatteredObject.src})`,
+        backgroundSize: "cover",
         py: { xs: 6, md: 8 },
       }}
     >
