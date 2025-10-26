@@ -345,7 +345,7 @@ export default function TestimonialsSection() {
                   backgroundColor: "text.primary",
                 },
               }}
-              onClick={() => swiperRef.current?.slideNext()}
+              onClick={() => swiperRef?.current?.slidePrev()}
             >
               <ArrowBackIosNewRoundedIcon sx={{ color: "#FFFFFF" }} />
             </Fab>
@@ -357,7 +357,7 @@ export default function TestimonialsSection() {
                   backgroundColor: "text.primary",
                 },
               }}
-              onClick={() => swiperRef?.current?.slidePrev()}
+              onClick={() => swiperRef.current?.slideNext()}
             >
               <ArrowForwardIosRoundedIcon sx={{ color: "#FFFFFF" }} />
             </Fab>
